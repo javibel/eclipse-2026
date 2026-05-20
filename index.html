@@ -18,8 +18,8 @@
 
     #mute-btn {
       position: fixed;
-      top: 6px;
-      left: 216px;
+      top: 11px;
+      left: 166px;
       z-index: 99999;
       background: transparent;
       border: none;
@@ -53,7 +53,7 @@
   </audio>
 
   <!-- Boton de silenciar -->
-  <button id="mute-btn" title="Silenciar">🔇</button>
+  <button id="mute-btn" title="Silenciar">🔊</button>
 
   <!-- Web original completa -->
   <iframe src="eclipse.html"></iframe>
@@ -77,12 +77,12 @@
       e.stopPropagation();
       audio.muted = !audio.muted;
       if (audio.muted) {
-        // Muted -> mostrar altavoz sin tachar (click para activar)
-        btn.textContent = '🔊';
+        // Muted -> mostrar altavoz tachado
+        btn.textContent = '🔇';
         btn.title = 'Activar música';
       } else {
-        // Sonando -> mostrar altavoz tachado (click para silenciar)
-        btn.textContent = '🔇';
+        // Sonando -> mostrar altavoz sin tachar
+        btn.textContent = '🔊';
         btn.title = 'Silenciar';
       }
     });
