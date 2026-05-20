@@ -18,8 +18,8 @@
 
     #mute-btn {
       position: fixed;
-      top: 16px;
-      left: 116px;
+      top: 6px;
+      left: 216px;
       z-index: 99999;
       background: transparent;
       border: none;
@@ -53,7 +53,7 @@
   </audio>
 
   <!-- Boton de silenciar -->
-  <button id="mute-btn" title="Activar música">🔊</button>
+  <button id="mute-btn" title="Silenciar">🔇</button>
 
   <!-- Web original completa -->
   <iframe src="eclipse.html"></iframe>
@@ -61,25 +61,29 @@
   <script>
     const audio = document.getElementById('bg-music');
     const btn = document.getElementById('mute-btn');
-    let playing = false;
 
     audio.volume = 0.35;
 
-    btn.addEventListener('click', function() {
-      if (!playing) {
+    // Autoplay al cargar
+    audio.play().catch(e => {
+      // Si el navegador bloquea, iniciar con el primer click en cualquier parte
+      document.addEventListener('click', function startAudio() {
         audio.play();
+        document.removeEventListener('click', startAudio);
+      }, { once: true });
+    });
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      audio.muted = !audio.muted;
+      if (audio.muted) {
+        // Muted -> mostrar altavoz sin tachar (click para activar)
+        btn.textContent = '🔊';
+        btn.title = 'Activar música';
+      } else {
+        // Sonando -> mostrar altavoz tachado (click para silenciar)
         btn.textContent = '🔇';
         btn.title = 'Silenciar';
-        playing = true;
-      } else {
-        audio.muted = !audio.muted;
-        if (audio.muted) {
-          btn.textContent = '🔊';
-          btn.title = 'Activar música';
-        } else {
-          btn.textContent = '🔇';
-          btn.title = 'Silenciar';
-        }
       }
     });
   </script>
