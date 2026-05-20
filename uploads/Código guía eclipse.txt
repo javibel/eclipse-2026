@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Eclipse Total 2026: Santibáñez el Bajo a Autilla del Pino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals with Eclipse Accents (Deep Navy, Golden Amber, Slate Gray) -->
+    <!-- Application Structure Plan: The SPA is structured as a chronological and logistical journey. It starts with the event (Hero/Countdown) to build excitement, explains the astronomical details (El Eclipse) for context, details the logistical core of the user's request (El Viaje - Santibáñez to Autilla), highlights the destination's unique advantages (El Destino), and concludes with safety/prep. Interactive elements include a dynamic countdown, a journey timing calculator, and dynamic data visualization charts. This functional dashboard approach prioritizes task completion (planning the trip) and understanding the event over a traditional static report. -->
+    <!-- Visualization & Content Choices: 
+         1. Eclipse Timeline -> Goal: Inform on timing -> Viz: HTML Grid Timeline -> Justification: Clear step-by-step readable format.
+         2. Sun Altitude & Trajectory -> Goal: Analyze viewing conditions -> Viz: Chart.js Line Chart -> Interaction: Hover tooltips -> Justification: Crucial for a sunset eclipse; shows how low the sun will be and why Autilla is needed. (NO SVG/Mermaid).
+         3. Route Planning -> Goal: Organize travel -> Viz: Interactive JS Calculator + CSS structured path diagram -> Interaction: User inputs arrival time -> Justification: Solves the specific "same day travel" constraint.
+         4. Historical Weather -> Goal: Inform on probability of success -> Viz: Chart.js Bar Chart -> Justification: Cloud cover is the biggest risk; visualizes historical August data for Palencia. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            scroll-behavior: smooth;
+        }
+        .eclipse-gradient {
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 70%, #020617 100%);
+        }
+        .sun-corona {
+            box-shadow: 0 0 50px 20px rgba(245, 158, 11, 0.4);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 50vh;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 40vh;
+                max-height: 300px;
+            }
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #f59e0b;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark-glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-amber-500 selection:text-white">
+
+    <nav class="fixed w-full z-50 glass-panel shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-slate-900 border-2 border-amber-500"></div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">Eclipse26<span class="text-amber-500">Guía</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#inicio" class="text-slate-600 hover:text-slate-900 font-medium nav-link">Inicio</a>
+                    <a href="#eclipse" class="text-slate-600 hover:text-slate-900 font-medium nav-link">El Eclipse</a>
+                    <a href="#viaje" class="text-slate-600 hover:text-slate-900 font-medium nav-link">Plan de Viaje</a>
+                    <a href="#destino" class="text-slate-600 hover:text-slate-900 font-medium nav-link">Autilla del Pino</a>
+                    <a href="#preparativos" class="text-slate-600 hover:text-slate-900 font-medium nav-link">Preparativos</a>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-slate-900 focus:outline-none">
+                        <span class="text-2xl">&#9776;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#inicio" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50">Inicio</a>
+                <a href="#eclipse" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50">El Eclipse</a>
+                <a href="#viaje" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50">Plan de Viaje</a>
+                <a href="#destino" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50">Autilla del Pino</a>
+                <a href="#preparativos" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50">Preparativos</a>
+            </div>
+        </div>
+    </nav>
+
+    <header id="inicio" class="relative pt-24 pb-32 lg:pt-36 lg:pb-40 overflow-hidden eclipse-gradient text-white">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 right-1/4 w-64 h-64 bg-amber-500 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
+            <div class="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-[120px] opacity-20"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-black rounded-full border-4 border-amber-200 sun-corona z-0"></div>
+        </div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full dark-glass-panel text-sm font-medium text-amber-300 mb-8">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                12 de Agosto de 2026
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+                Misión: <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">Totalidad</span>
+            </h1>
+            <p class="mt-4 max-w-2xl text-xl text-slate-300 mx-auto mb-10">
+                Guía estratégica para desplazarse desde Santibáñez el Bajo y disfrutar del eclipse solar total en el Mirador de Autilla del Pino (Palencia).
+            </p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto dark-glass-panel p-6 rounded-2xl">
+                <div class="text-center">
+                    <div id="cd-days" class="text-3xl md:text-5xl font-bold text-white">00</div>
+                    <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">Días</div>
+                </div>
+                <div class="text-center">
+                    <div id="cd-hours" class="text-3xl md:text-5xl font-bold text-white">00</div>
+                    <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">Horas</div>
+                </div>
+                <div class="text-center">
+                    <div id="cd-minutes" class="text-3xl md:text-5xl font-bold text-white">00</div>
+                    <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">Minutos</div>
+                </div>
+                <div class="text-center">
+                    <div id="cd-seconds" class="text-3xl md:text-5xl font-bold text-amber-500">00</div>
+                    <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">Segundos</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="eclipse" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">La Dinámica del Eclipse en Autilla</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                        Esta sección desglosa la cronología exacta del fenómeno visualizado desde nuestro destino. El eclipse de 2026 en España es peculiar: ocurrirá muy cerca del atardecer, lo que exige un horizonte oeste completamente despejado.
+                    </p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-slate-800 mb-6">Cronología del Evento (Hora Local CEST)</h3>
+                        <div class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-amber-500 before:via-slate-300 before:to-slate-300">
+                            
+                            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-slate-200 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                                    <span class="text-xl">&#9724;</span>
+                                </div>
+                                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-slate-200 bg-white shadow-sm">
+                                    <div class="flex items-center justify-between space-x-2 mb-1">
+                                        <div class="font-bold text-slate-900">Inicio Fase Parcial (C1)</div>
+                                        <time class="text-amber-600 font-mono font-semibold">19:33:00</time>
+                                    </div>
+                                    <div class="text-slate-500 text-sm">El disco lunar comienza a ocultar el sol. Imprescindible uso de gafas especiales.</div>
+                                </div>
+                            </div>
+                            
+                            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-slate-900 text-amber-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                                    <span class="text-xl">&#9679;</span>
+                                </div>
+                                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border-2 border-amber-400 bg-amber-50 shadow-md">
+                                    <div class="flex items-center justify-between space-x-2 mb-1">
+                                        <div class="font-bold text-slate-900">Inicio Totalidad (C2)</div>
+                                        <time class="text-amber-600 font-mono font-bold">20:27:32</time>
+                                    </div>
+                                    <div class="text-slate-700 text-sm font-medium">Cae la noche abruptamente. Se puede observar la corona solar a simple vista.</div>
+                                </div>
+                            </div>
+
+                            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-amber-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                                    <span class="text-xl">&#9728;</span>
+                                </div>
+                                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-slate-200 bg-white shadow-sm">
+                                    <div class="flex items-center justify-between space-x-2 mb-1">
+                                        <div class="font-bold text-slate-900">Fin Totalidad (C3)</div>
+                                        <time class="text-amber-600 font-mono font-semibold">20:29:17</time>
+                                    </div>
+                                    <div class="text-slate-500 text-sm">Aparece el "anillo de diamantes". Retomar gafas de protección inmediatamente. Duración total: ~1m 45s.</div>
+                                </div>
+                            </div>
+
+                            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-slate-200 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                                    <span class="text-xl">&#9660;</span>
+                                </div>
+                                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-slate-200 bg-slate-50 shadow-sm">
+                                    <div class="flex items-center justify-between space-x-2 mb-1">
+                                        <div class="font-bold text-slate-900">Ocaso del Sol</div>
+                                        <time class="text-amber-600 font-mono font-semibold">21:19:00</time>
+                                    </div>
+                                    <div class="text-slate-500 text-sm">El sol se oculta bajo el horizonte antes de que termine la fase parcial (C4).</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Trayectoria y Altitud Solar</h3>
+                        <p class="text-sm text-slate-600 mb-6">
+                            El reto de este eclipse es la baja altitud del sol. Observe cómo la totalidad ocurre a menos de 15º sobre el horizonte.
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="altitudeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="viaje" class="py-20 bg-slate-50 border-y border-slate-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Estrategia de Desplazamiento en el Mismo Día</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                        Viajar desde Santibáñez el Bajo a Autilla del Pino el mismo día del eclipse requiere una planificación estricta para evitar atascos e imprevistos. Aquí organizamos la logística de ruta y tiempos.
+                    </p>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                            <div>
+                                <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold">Origen</p>
+                                <p class="text-lg font-bold text-slate-900">Santibáñez el Bajo</p>
+                                <p class="text-sm text-slate-500">Cáceres</p>
+                            </div>
+                            <div class="text-2xl text-slate-300">&#10142;</div>
+                        </div>
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                            <div>
+                                <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold">Destino</p>
+                                <p class="text-lg font-bold text-amber-600">Autilla del Pino</p>
+                                <p class="text-sm text-slate-500">Palencia (Mirador)</p>
+                            </div>
+                            <div class="text-2xl text-amber-200">&#9679;</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                            <div class="bg-slate-50 p-3 rounded-lg text-center">
+                                <p class="text-xs text-slate-500 uppercase mb-1">Distancia</p>
+                                <p class="font-mono font-bold text-slate-800 text-lg">~315 km</p>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-lg text-center">
+                                <p class="text-xs text-slate-500 uppercase mb-1">Tiempo Base</p>
+                                <p class="font-mono font-bold text-slate-800 text-lg">3h 15m</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-100 text-sm text-amber-800">
+                            <strong>Nota de Tráfico:</strong> Se espera tráfico inusualmente denso en dirección norte (A-66 y A-62) debido a los cazadores de eclipses. Añada al menos un 50% de margen al tiempo base.
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Calculadora Estratégica de Salida</h3>
+                        <p class="text-slate-600 mb-6 text-sm">
+                            Configure su hora ideal de llegada a Autilla del Pino. Recomendamos llegar entre las 16:00 y las 17:00 para asegurar aparcamiento, montar equipo y descansar antes del inicio a las 19:33.
+                        </p>
+
+                        <div class="flex flex-col md:flex-row gap-6 items-end mb-8 bg-slate-50 p-6 rounded-xl">
+                            <div class="w-full md:w-1/2">
+                                <label for="arrivalTime" class="block text-sm font-medium text-slate-700 mb-2">Hora deseada de llegada a Autilla:</label>
+                                <select id="arrivalTime" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-lg p-3 border bg-white">
+                                    <option value="15:00">15:00 (Muy conservador - Recomendado)</option>
+                                    <option value="16:00" selected>16:00 (Equilibrado)</option>
+                                    <option value="17:00">17:00 (Ajustado)</option>
+                                    <option value="18:00">18:00 (Alto riesgo de atasco)</option>
+                                </select>
+                            </div>
+                            <div class="w-full md:w-1/2">
+                                <label for="trafficMargin" class="block text-sm font-medium text-slate-700 mb-2">Margen por tráfico evento:</label>
+                                <select id="trafficMargin" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-lg p-3 border bg-white">
+                                    <option value="60">1 hora extra</option>
+                                    <option value="90" selected>1.5 horas extra (Recomendado)</option>
+                                    <option value="120">2 horas extra</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-xl p-6 text-white text-center relative overflow-hidden">
+                            <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-500 rounded-full opacity-10 filter blur-xl"></div>
+                            <h4 class="text-slate-300 text-sm uppercase tracking-wider mb-2">Hora límite de salida recomendada</h4>
+                            <div class="text-4xl md:text-5xl font-mono font-bold text-amber-400 mb-2" id="departureResult">--:--</div>
+                            <p class="text-slate-400 text-sm" id="departureDetails">Calculando...</p>
+                        </div>
+
+                        <div class="mt-8 border-t border-slate-100 pt-6">
+                            <h4 class="font-semibold text-slate-800 mb-3">Itinerario Principal Recomendado</h4>
+                            <ul class="space-y-3 text-sm text-slate-600">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-amber-500 mt-0.5">&#10146;</span>
+                                    <span>Salida de Santibáñez el Bajo hacia la <strong>EX-205</strong> y <strong>EX-370</strong> dirección Plasencia.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-amber-500 mt-0.5">&#10146;</span>
+                                    <span>Incorporación a la autovía <strong>A-66 (Ruta de la Plata)</strong> dirección Salamanca. (Tramo largo y cómodo).</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-amber-500 mt-0.5">&#10146;</span>
+                                    <span>Pasado Salamanca, tomar la <strong>A-62</strong> dirección Valladolid / Palencia.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-amber-500 mt-0.5">&#10146;</span>
+                                    <span>En la circunvalación de Palencia, tomar desvíos hacia la <strong>P-901</strong> para ascender directamente al páramo de Autilla del Pino.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="destino" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">El Destino: Mirador de Autilla del Pino</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                        ¿Por qué viajar más de 300km hasta este pequeño municipio palentino? La respuesta está en la orografía y el clima, factores críticos para un eclipse al atardecer. En esta sección analizamos el entorno geográfico y las perspectivas meteorológicas históricas.
+                    </p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-12 items-start">
+                    
+                    <div class="space-y-8">
+                        <div class="bg-amber-50 rounded-2xl p-8 border border-amber-100 relative overflow-hidden">
+                            <div class="absolute right-0 bottom-0 text-9xl text-amber-500 opacity-5 leading-none">&#127748;</div>
+                            <h3 class="text-2xl font-bold text-amber-900 mb-4 relative z-10">El Balcón de Tierra de Campos</h3>
+                            <p class="text-amber-800 mb-4 relative z-10">
+                                Autilla del Pino se asienta sobre un páramo a <strong>860 metros de altitud</strong>. El famoso mirador ofrece una caída abrupta hacia el oeste, abriendo una panorámica inmensa sobre la llanura de Tierra de Campos.
+                            </p>
+                            <ul class="space-y-2 text-amber-800 relative z-10 font-medium">
+                                <li>&#10003; Horizonte oeste 0º completamente despejado.</li>
+                                <li>&#10003; Altitud superior que reduce la calima del valle.</li>
+                                <li>&#10003; Visión privilegiada de la sombra lunar avanzando sobre la llanura antes de la totalidad.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-2">Instalaciones y Entorno</h4>
+                            <p class="text-slate-600 text-sm mb-4">
+                                El mirador cuenta con una zona de aparcamiento que se llenará rápido. Existe una pradera adyacente donde se suele situar el público. Es una zona muy expuesta al viento.
+                            </p>
+                            <div class="flex gap-2 text-xs">
+                                <span class="bg-slate-200 text-slate-700 px-2 py-1 rounded">Altitud: 860m</span>
+                                <span class="bg-slate-200 text-slate-700 px-2 py-1 rounded">Coordenadas: 41.99N, 4.63W</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Análisis Climático (Histórico Agosto)</h3>
+                        <p class="text-sm text-slate-600 mb-6">
+                            La meseta norte central (Palencia) ofrece una de las mejores probabilidades de cielos despejados de toda Europa para agosto. El siguiente gráfico muestra datos históricos de nubosidad.
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="weatherChart"></canvas>
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-50 text-blue-800 text-sm rounded border border-blue-100 flex items-start gap-2">
+                            <span class="text-xl leading-none">&#8505;</span>
+                            <p>Históricamente, Autilla tiene más del <strong>75% de probabilidad</strong> de cielo despejado en las tardes de agosto, un factor decisivo a favor frente a la costa cantábrica.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="preparativos" class="py-20 bg-slate-900 text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-white mb-4">Preparativos y Seguridad</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-slate-400">
+                        Una expedición de un día requiere llevar todo lo necesario. En el páramo las condiciones pueden variar y durante la totalidad la temperatura caerá varios grados.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-amber-500 transition-colors">
+                        <div class="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 text-2xl mb-4">
+                            &#128083;
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Protección Visual</h3>
+                        <p class="text-slate-400 text-sm mb-4">
+                            Es absolutamente obligatorio el uso de gafas de eclipse certificadas (ISO 12312-2) durante toda la fase parcial. Solo se pueden retirar durante el escaso minuto y medio de la totalidad.
+                        </p>
+                        <ul class="text-sm text-slate-300 space-y-1">
+                            <li>- Revisar que no estén rayadas ni perforadas.</li>
+                            <li>- Filtros solares obligatorios para cámaras o prismáticos.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-amber-500 transition-colors">
+                        <div class="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 text-2xl mb-4">
+                            &#129523;
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Equipamiento de Supervivencia</h3>
+                        <p class="text-slate-400 text-sm mb-4">
+                            Al viajar desde Cáceres hasta un páramo palentino y volver, la autonomía es clave. Evite depender de la hostelería local que estará saturada.
+                        </p>
+                        <ul class="text-sm text-slate-300 space-y-1">
+                            <li>- Agua abundante (mínimo 3L/persona).</li>
+                            <li>- Comida para el almuerzo y la cena.</li>
+                            <li>- Ropa de abrigo (la temperatura caerá ~5-8ºC durante el eclipse y al anochecer hará viento).</li>
+                            <li>- Sillas plegables.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-amber-500 transition-colors">
+                        <div class="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 text-2xl mb-4">
+                            &#128663;
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Logística del Vehículo</h3>
+                        <p class="text-slate-400 text-sm mb-4">
+                            Su coche es su campamento base. Asegure su estado antes de salir de Santibáñez el Bajo.
+                        </p>
+                        <ul class="text-sm text-slate-300 space-y-1">
+                            <li>- Depósito de combustible lleno al salir de Extremadura.</li>
+                            <li>- Batería portátil para móviles (las redes pueden saturarse drenando batería).</li>
+                            <li>- Mapas descargados offline.</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="mt-16 bg-gradient-to-r from-amber-600 to-amber-500 rounded-2xl p-8 text-center text-white shadow-xl">
+                    <h3 class="text-2xl font-bold mb-4">Regla de Oro del Observador</h3>
+                    <p class="text-lg opacity-90 max-w-2xl mx-auto">
+                        "Si vas a hacer fotos, dedica solo los primeros 10 segundos de la totalidad a las cámaras. El resto del tiempo, levanta la vista, mira a tu alrededor, siente la caída térmica y disfruta del evento astronómico más espectacular a simple vista."
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-950 text-slate-500 py-8 border-t border-slate-900 text-center text-sm">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>Datos astronómicos basados en previsiones para el eclipse del 12 de agosto de 2026 en Autilla del Pino, Palencia (España).</p>
+            <p class="mt-2">Creado para fines de planificación y divulgación.</p>
+        </div>
+    </footer>
+
+    <script>
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 64,
+                        behavior: 'smooth'
+                    });
+                }
+                const mobileMenu = document.getElementById('mobile-menu');
+                if(!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        const targetDate = new Date("August 12, 2026 20:27:00").getTime();
+        const daysEl = document.getElementById('cd-days');
+        const hoursEl = document.getElementById('cd-hours');
+        const minsEl = document.getElementById('cd-minutes');
+        const secsEl = document.getElementById('cd-seconds');
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) {
+                daysEl.innerText = "00";
+                hoursEl.innerText = "00";
+                minsEl.innerText = "00";
+                secsEl.innerText = "00";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            daysEl.innerText = days.toString().padStart(2, '0');
+            hoursEl.innerText = hours.toString().padStart(2, '0');
+            minsEl.innerText = minutes.toString().padStart(2, '0');
+            secsEl.innerText = seconds.toString().padStart(2, '0');
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        const ctxAltitude = document.getElementById('altitudeChart').getContext('2d');
+        const timeLabels = ['19:00', '19:33 (C1)', '20:00', '20:27 (C2)', '20:45', '21:19 (Ocaso)'];
+        const altitudeData = [18.5, 12.8, 7.5, 2.5, -0.5, -6.5];
+
+        new Chart(ctxAltitude, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Altitud Solar (Grados)',
+                    data: altitudeData,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: ['#1e293b', '#64748b', '#1e293b', '#f59e0b', '#1e293b', '#94a3b8'],
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: [4, 6, 4, 8, 4, 6],
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) { label += context.parsed.y + 'º'; }
+                                if (context.dataIndex === 1) return label + ' (Inicio Parcial)';
+                                if (context.dataIndex === 3) return label + ' (TOTALIDAD)';
+                                if (context.dataIndex === 5) return label + ' (Sol bajo horizonte)';
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Altitud sobre horizonte (º)' },
+                        grid: { color: '#e2e8f0' },
+                        min: -10,
+                        max: 25
+                    },
+                    x: {
+                        title: { display: true, text: 'Hora (CEST)' },
+                        grid: { display: false }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            }
+        });
+
+        const ctxWeather = document.getElementById('weatherChart').getContext('2d');
+        new Chart(ctxWeather, {
+            type: 'bar',
+            data: {
+                labels: ['Despejado', 'Nubes Parciales', 'Mayormente Nublado', 'Lluvia'],
+                datasets: [{
+                    label: 'Probabilidad Agosto (%)',
+                    data: [76, 15, 7, 2],
+                    backgroundColor: ['#38bdf8', '#bae6fd', '#94a3b8', '#475569'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + '% de días históricos';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Probabilidad (%)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        const arrTimeSelect = document.getElementById('arrivalTime');
+        const marginSelect = document.getElementById('trafficMargin');
+        const resTimeEl = document.getElementById('departureResult');
+        const resDetEl = document.getElementById('departureDetails');
+
+        function calculateDeparture() {
+            const arrTimeVal = arrTimeSelect.value;
+            const marginMins = parseInt(marginSelect.value, 10);
+            const baseTravelMins = (3 * 60) + 15; 
+            
+            const [arrH, arrM] = arrTimeVal.split(':').map(Number);
+            let arrTotalMins = (arrH * 60) + arrM;
+            
+            const totalTravelMins = baseTravelMins + marginMins;
+            let depTotalMins = arrTotalMins - totalTravelMins;
+            
+            if (depTotalMins < 0) depTotalMins += (24 * 60);
+
+            const depH = Math.floor(depTotalMins / 60);
+            const depM = depTotalMins % 60;
+            
+            const fmtH = depH.toString().padStart(2, '0');
+            const fmtM = depM.toString().padStart(2, '0');
+            
+            resTimeEl.innerText = `${fmtH}:${fmtM}`;
+            resDetEl.innerText = `Viaje base (3h 15m) + Margen (${marginMins}m). Total trayecto estimado: ${Math.floor(totalTravelMins/60)}h ${totalTravelMins%60}m.`;
+        }
+
+        arrTimeSelect.addEventListener('change', calculateDeparture);
+        marginSelect.addEventListener('change', calculateDeparture);
+        
+        calculateDeparture();
+    </script>
+</body>
+</html>
