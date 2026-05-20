@@ -18,27 +18,30 @@
 
     #mute-btn {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      bottom: 16px;
+      right: 16px;
       z-index: 99999;
-      background: rgba(255, 179, 59, 0.95);
+      background: rgba(255, 179, 59, 0.85);
       border: none;
       color: #0a0a14;
-      padding: 12px 18px;
-      border-radius: 8px;
+      padding: 6px 10px;
+      border-radius: 50%;
       cursor: pointer;
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 18px;
+      line-height: 1;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      box-shadow: 0 4px 16px rgba(255, 179, 59, 0.5);
+      box-shadow: 0 2px 8px rgba(255, 179, 59, 0.4);
       transition: all 0.3s ease;
-      letter-spacing: 0.5px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #mute-btn:hover {
       background: rgba(255, 179, 59, 1);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 179, 59, 0.6);
+      transform: scale(1.1);
     }
   </style>
 </head>
@@ -50,7 +53,7 @@
   </audio>
 
   <!-- Boton de silenciar -->
-  <button id="mute-btn">🔊 Activar música</button>
+  <button id="mute-btn" title="Activar música">🔊</button>
 
   <!-- Web original completa -->
   <iframe src="eclipse.html"></iframe>
@@ -65,14 +68,17 @@
     btn.addEventListener('click', function() {
       if (!playing) {
         audio.play();
-        btn.textContent = '🔇 Silenciar';
+        btn.textContent = '🔇';
+        btn.title = 'Silenciar';
         playing = true;
       } else {
         audio.muted = !audio.muted;
         if (audio.muted) {
-          btn.textContent = '🔊 Activar música';
+          btn.textContent = '🔊';
+          btn.title = 'Activar música';
         } else {
-          btn.textContent = '🔇 Silenciar';
+          btn.textContent = '🔇';
+          btn.title = 'Silenciar';
         }
       }
     });
