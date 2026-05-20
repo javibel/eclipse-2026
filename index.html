@@ -8,6 +8,46 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a14; }
 
+    /* Pantalla de entrada */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #0a0a14;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.6s ease;
+    }
+
+    #splash svg {
+      width: 280px;
+      height: 280px;
+      filter: drop-shadow(0 0 50px rgba(255, 179, 59, 0.4));
+      margin-bottom: 40px;
+    }
+
+    #splash .enter-text {
+      color: #f3ead4;
+      font-family: serif;
+      font-style: italic;
+      font-size: 28px;
+      letter-spacing: 2px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     iframe {
       position: fixed;
       top: 0; left: 0;
@@ -47,6 +87,25 @@
 </head>
 <body>
 
+  <!-- Pantalla de entrada -->
+  <div id="splash">
+    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="corona" cx="50%" cy="50%" r="50%">
+          <stop offset="50%" stop-color="#0a0a14"></stop>
+          <stop offset="55%" stop-color="#ffb13b" stop-opacity="1"></stop>
+          <stop offset="65%" stop-color="#ff8a1a" stop-opacity="0.7"></stop>
+          <stop offset="85%" stop-color="#ffb13b" stop-opacity="0.3"></stop>
+          <stop offset="100%" stop-color="#0a0a14" stop-opacity="0"></stop>
+        </radialGradient>
+      </defs>
+      <rect width="400" height="400" fill="#0a0a14"></rect>
+      <circle cx="200" cy="200" r="140" fill="url(#corona)"></circle>
+      <circle cx="200" cy="200" r="80" fill="#0a0a14"></circle>
+    </svg>
+    <div class="enter-text">Toca para entrar</div>
+  </div>
+
   <!-- Audio de fondo en bucle -->
   <audio id="bg-music" loop preload="auto">
     <source src="cielo-roto.mp3" type="audio/mpeg">
@@ -61,27 +120,27 @@
   <script>
     const audio = document.getElementById('bg-music');
     const btn = document.getElementById('mute-btn');
+    const splash = document.getElementById('splash');
 
     audio.volume = 0.35;
 
-    // Autoplay al cargar
-    audio.play().catch(e => {
-      // Si el navegador bloquea, iniciar con el primer click en cualquier parte
-      document.addEventListener('click', function startAudio() {
-        audio.play();
-        document.removeEventListener('click', startAudio);
-      }, { once: true });
+    // Click en splash inicia la música y oculta la pantalla
+    splash.addEventListener('click', function() {
+      audio.play();
+      splash.classList.add('hidden');
+      setTimeout(function() {
+        splash.style.display = 'none';
+      }, 600);
     });
 
+    // Botón mute
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
       audio.muted = !audio.muted;
       if (audio.muted) {
-        // Muted -> mostrar altavoz tachado
         btn.textContent = '🔇';
         btn.title = 'Activar música';
       } else {
-        // Sonando -> mostrar altavoz sin tachar
         btn.textContent = '🔊';
         btn.title = 'Silenciar';
       }
