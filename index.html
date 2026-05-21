@@ -102,8 +102,8 @@
   <!-- Boton de silenciar -->
   <button id="mute-btn" title="Silenciar">🔊</button>
 
-  <!-- Web original completa -->
-  <iframe src="eclipse.html"></iframe>
+  <!-- Web original completa (se carga tras el splash) -->
+  <iframe id="main-frame"></iframe>
 
   <script>
     const audio = document.getElementById('bg-music');
@@ -112,9 +112,12 @@
 
     audio.volume = 0.35;
 
-    // Click en splash inicia la música y oculta la pantalla
+    const frame = document.getElementById('main-frame');
+
+    // Click en splash: carga la web, inicia música, oculta splash
     splash.addEventListener('click', function() {
       audio.play();
+      frame.src = 'eclipse.html';
       splash.classList.add('hidden');
       setTimeout(function() {
         splash.style.display = 'none';
