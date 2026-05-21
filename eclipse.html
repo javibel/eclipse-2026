@@ -755,8 +755,8 @@
     <p class="lead">Reserva el 12 y el 13 de agosto. Avisa, que voy reservando casa y haciendo cuentas con las plazas del coche.</p>
 
     <div class="rsvp-btns">
-      <a class="btn primary" href="https://wa.me/?text=Me%20apunto%20al%20eclipse%20del%2012.08.2026.%20Autilla%20del%20Pino.%20¿Plan?">Me apunto &nbsp;★</a>
-      <a class="btn ghost" href="#why">Aún lo estoy pensando</a>
+      <button class="btn primary" id="btn-apunto" onclick="this.textContent='✓ ¡Apuntado!'; this.style.opacity='0.7'; this.style.pointerEvents='none';">Me apunto &nbsp;★</button>
+      <button class="btn ghost" id="btn-pensando" onclick="this.textContent='✓ Ok, piénsalo'; this.style.opacity='0.7'; this.style.pointerEvents='none';">Aún lo estoy pensando</button>
     </div>
 
     <div class="rsvp-meta">
